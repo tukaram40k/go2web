@@ -9,6 +9,6 @@ import (
 func main() {
 	cfg := cli.GetFlags()
 	fmt.Printf("URL: %s\n", cfg.URL)
-	fmt.Printf("Search Results: %d\n", cfg.Search)
+	fmt.Printf("Search Results: %s\n", cfg.Search)
 	fmt.Printf("Help: %t\n", cfg.Help)
 }
