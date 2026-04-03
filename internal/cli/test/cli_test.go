@@ -87,3 +87,49 @@ func TestGetFlags_Help(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateURL(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		expected    string
+		shouldError bool
+	}{
+		// Valid URLs
+		{"valid https URL", "https://example.com", "https://example.com", false},
+		{"valid http URL", "http://example.com", "http://example.com", false},
+		{"valid URL with path", "https://example.com/path", "https://example.com/path", false},
+		{"valid URL with query params", "https://example.com/search?q=golang", "https://example.com/search?q=golang", false},
+		{"valid URL with subdomain", "https://www.example.com", "https://www.example.com", false},
+		{"valid URL with multiple subdomains", "https://a.b.c.example.com", "https://a.b.c.example.com", false},
+
+		// URLs that get http:// prepended
+		{"URL without scheme", "example.com", "http://example.com", false},
+		{"URL without scheme and path", "example.com/path", "http://example.com/path", false},
+
+		// Invalid URLs
+		{"empty URL", "", "", true},
+		{"URL without domain", "http://", "", true},
+		{"URL with invalid domain (single part)", "http://localhost", "", true},
+		{"URL with trailing dot", "http://example.", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := cli.ValidateURL(tt.input)
+
+			if tt.shouldError {
+				if err == nil {
+					t.Errorf("Expected error for input %q, got nil", tt.input)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error for input %q: %v", tt.input, err)
+				}
+				if result != tt.expected {
+					t.Errorf("Expected result %q, got %q", tt.expected, result)
+				}
+			}
+		})
+	}
+}
