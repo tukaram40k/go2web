@@ -9,16 +9,27 @@ func Run() {
 	cfg := cli.GetFlags()
 	
 	fmt.Printf("URL: %s\n", cfg.URL)
-	fmt.Printf("Search Results: %s\n", cfg.Search)
+	fmt.Printf("Search: %s\n", cfg.Search)
 	fmt.Printf("Help: %t\n", cfg.Help)
-
-	// validate url/search here
 
 	if cfg.Help {
 		cli.PrintHelp()
-	} else if cfg.URL != "" {
-		// call url mode finctions
-	} else if cfg.Search != "" {
+		return
+	} 
+	
+	if cfg.URL != "" {
+		url, err := cli.ValidateURL(cfg.URL)
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+			return
+		} else {
+			fmt.Printf("URL: %s\n", url)
+			// call url mode functions
+			return
+		}
+	}
+	
+	if cfg.Search != "" {
 		// call search mode functions
 	}
 }
