@@ -1,14 +1,9 @@
 package main
 
 import (
-	"fmt"
-
-	"go2web/internal/cli"
+	"go2web/internal/app"
 )
 
 func main() {
-	cfg := cli.GetFlags()
-	fmt.Printf("URL: %s\n", cfg.URL)
-	fmt.Printf("Search Results: %s\n", cfg.Search)
-	fmt.Printf("Help: %t\n", cfg.Help)
+	app.Run()
 }
