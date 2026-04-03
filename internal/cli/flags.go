@@ -12,10 +12,12 @@ type Config struct {
 	Help   bool
 }
 
+// parse flags and return struct
 func GetFlags() *Config {
 	return GetFlagsFromSet(flag.CommandLine, os.Args[1:])
 }
 
+// helper
 func GetFlagsFromSet(fs *flag.FlagSet, args []string) *Config {
 	c := &Config{}
 
@@ -29,12 +31,16 @@ func GetFlagsFromSet(fs *flag.FlagSet, args []string) *Config {
 	fs.BoolVar(&c.Help, "h", false, "")
 
 	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Options:\n")
-		fmt.Fprintf(os.Stderr, "  -u, -url <URL>               # make an HTTP request to the specified URL and print the response\n")
-		fmt.Fprintf(os.Stderr, "  -s, -search <search-term>    # make an HTTP request to search the term using your favorite search engine and print top 10 results\n")
-		fmt.Fprintf(os.Stderr, "  -h, -help                    # show this help\n")
+		PrintHelp()
 	}
 
 	fs.Parse(args)
 	return c
+}
+
+func PrintHelp() {
+	fmt.Fprintf(os.Stderr, "Options:\n")
+	fmt.Fprintf(os.Stderr, "  -u, -url <URL>               # make an HTTP request to the specified URL and print the response\n")
+	fmt.Fprintf(os.Stderr, "  -s, -search <search-term>    # make an HTTP request to search the term using your favorite search engine and print top 10 results\n")
+	fmt.Fprintf(os.Stderr, "  -h, -help                    # show this help\n")
 }
