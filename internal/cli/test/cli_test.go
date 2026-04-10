@@ -111,7 +111,17 @@ func TestValidateURL(t *testing.T) {
 		{"empty URL", "", "", true},
 		{"URL without domain", "http://", "", true},
 		{"URL with invalid domain (single part)", "http://localhost", "", true},
-		{"URL with trailing dot", "http://example.", "", true},
+		{"Invalid URL 4", "http://example.com.http://example.com", "", true},
+		{"Invalid URL 5", "http://example.", "", true},
+		{"Invalid URL 6", "http://example.com.", "", true},
+		{"Invalid URL 7", "http://.com", "", true},
+		{"Invalid URL 8", "http://example.com:99999", "", true},
+		{"Invalid URL 9", "https://example..com", "", true},
+		{"Invalid URL 10", "http://-example.com", "", true},
+		{"Invalid URL 11", "javascript:alert(1)", "", true},
+		{"Invalid URL 12", "http://[::1]]", "", true},
+		{"Invalid URL 13", "http://123.456.789.0", "", true},
+		{"Invalid URL 14", "http:// user:pass@example.com", "", true},
 	}
 
 	for _, tt := range tests {

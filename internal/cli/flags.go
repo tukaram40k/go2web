@@ -3,9 +3,10 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"os"
-	"strings"
 	"net/url"
+	"os"
+	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -61,9 +62,60 @@ func ValidateURL(s string) (string, error) {
 		return "", fmt.Errorf("invalid url: %w", err)
 	}
 
-	parts := strings.Split(u.Host, ".")
-	if len(parts) < 2 || parts[len(parts)-1] == "" {
-		return "", fmt.Errorf("invalid domain name")
+	if u.Host == "" {
+		return "", fmt.Errorf("invalid url: missing host")
+	}
+
+	// Validate port if present
+	if port := u.Port(); port != "" {
+		n, err := strconv.Atoi(port)
+		if err != nil || n < 1 || n > 65535 {
+			return "", fmt.Errorf("invalid port number")
+		}
+	}
+
+	hostname := u.Hostname()
+
+	// Check for IPv4 literals and validate octets
+	if strings.Contains(hostname, ".") && strings.Count(hostname, ".") == 3 {
+		parts := strings.Split(hostname, ".")
+		allNumeric := true
+		for _, part := range parts {
+			if _, err := strconv.Atoi(part); err != nil {
+				allNumeric = false
+				break
+			}
+		}
+		if allNumeric {
+			// It's an IPv4 address — validate octets
+			for _, part := range parts {
+				n, _ := strconv.Atoi(part)
+				if n < 0 || n > 255 {
+					return "", fmt.Errorf("invalid IP address")
+				}
+			}
+		} else {
+			// It's a domain name — validate as hostname
+			if len(parts) < 2 {
+				return "", fmt.Errorf("invalid domain name")
+			}
+			for _, part := range parts {
+				if part == "" || strings.HasPrefix(part, "-") || part == "http" || part == "https" {
+					return "", fmt.Errorf("invalid domain name")
+				}
+			}
+		}
+	} else {
+		// Not an IPv4 address, validate as hostname
+		parts := strings.Split(hostname, ".")
+		if len(parts) < 2 {
+			return "", fmt.Errorf("invalid domain name")
+		}
+		for _, part := range parts {
+			if part == "" || strings.HasPrefix(part, "-") || part == "http" || part == "https" {
+				return "", fmt.Errorf("invalid domain name")
+			}
+		}
 	}
 
 	return s, nil
