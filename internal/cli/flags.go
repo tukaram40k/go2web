@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"go2web/internal/ui"
 )
 
 type Config struct {
@@ -24,11 +26,11 @@ func GetFlags() *Config {
 func GetFlagsFromSet(fs *flag.FlagSet, args []string) *Config {
 	c := &Config{}
 
-	fs.StringVar(&c.URL, "url", "http://example.com", "Website URL")
-	fs.StringVar(&c.URL, "u", "http://example.com", "")
+	fs.StringVar(&c.URL, "url", "", "Website URL")
+	fs.StringVar(&c.URL, "u", "", "")
 
-	fs.StringVar(&c.Search, "search", "search term", "Search term")
-	fs.StringVar(&c.Search, "s", "search term", "")
+	fs.StringVar(&c.Search, "search", "", "Search term")
+	fs.StringVar(&c.Search, "s", "", "")
 
 	fs.BoolVar(&c.Help, "help", false, "Display help information")
 	fs.BoolVar(&c.Help, "h", false, "")
@@ -42,10 +44,10 @@ func GetFlagsFromSet(fs *flag.FlagSet, args []string) *Config {
 }
 
 func PrintHelp() {
-	fmt.Fprintf(os.Stderr, "Options:\n")
-	fmt.Fprintf(os.Stderr, "  -u, -url <URL>               # make an HTTP request to the specified URL and print the response\n")
-	fmt.Fprintf(os.Stderr, "  -s, -search <search-term>    # make an HTTP request to search the term using your favorite search engine and print top 10 results\n")
-	fmt.Fprintf(os.Stderr, "  -h, -help                    # show this help\n")
+	ui.Print("Options:\n")
+	ui.Print("  -u, -url <URL>               # make an HTTP request to the specified URL and print the response\n")
+	ui.Print("  -s, -search <search-term>    # make an HTTP request to search the term using your favorite search engine and print top 10 results\n")
+	ui.Print("  -h, -help                    # show this help\n")
 }
 
 func ValidateURL(s string) (string, error) {

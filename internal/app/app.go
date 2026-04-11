@@ -1,18 +1,18 @@
 package app
 
 import (
-	"fmt"
 	"go2web/internal/cli"
+	"go2web/internal/ui"
 )
 
 func Run() {
 	cfg := cli.GetFlags()
 	
-	fmt.Printf("URL: %s\n", cfg.URL)
-	fmt.Printf("Search: %s\n", cfg.Search)
-	fmt.Printf("Help: %t\n", cfg.Help)
+	ui.Print("URL: %s\n", cfg.URL)
+	ui.Print("Search: %s\n", cfg.Search)
+	ui.Print("Help: %t\n", cfg.Help)
 
-	if cfg.Help {
+	if cfg.Help || (cfg.URL == "" && cfg.Search == "") {
 		cli.PrintHelp()
 		return
 	} 
@@ -20,10 +20,10 @@ func Run() {
 	if cfg.URL != "" {
 		url, err := cli.ValidateURL(cfg.URL)
 		if err != nil {
-			fmt.Printf("error: %v\n", err)
+			ui.Print("error: %v\n", err)
 			return
 		} else {
-			fmt.Printf("URL: %s\n", url)
+			ui.Print("URL: %s\n", url)
 			// call url mode functions
 			return
 		}

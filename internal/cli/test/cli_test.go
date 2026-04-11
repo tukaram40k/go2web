@@ -14,11 +14,11 @@ func TestGetFlags_Default(t *testing.T) {
 		t.Fatal("Expected flags to be non-nil")
 	}
 
-	if flags.URL != "http://example.com" {
-		t.Errorf("Expected default URL 'http://example.com', got %q", flags.URL)
+	if flags.URL != "" {
+		t.Errorf("Expected empty URL, got %q", flags.URL)
 	}
-	if flags.Search != "search term" {
-		t.Errorf("Expected default Search 'search term', got %q", flags.Search)
+	if flags.Search != "" {
+		t.Errorf("Expected empty Search, got %q", flags.Search)
 	}
 	if flags.Help != false {
 		t.Errorf("Expected default Help false, got %v", flags.Help)
