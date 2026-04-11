@@ -2,7 +2,6 @@ package cli
 
 import (
 	"flag"
-	"fmt"
 	"net/url"
 	"os"
 	"strconv"
@@ -52,7 +51,7 @@ func PrintHelp() {
 
 func ValidateURL(s string) (string, error) {
 	if s == "" {
-		return "", fmt.Errorf("empty url given")
+		return "", ui.Error("empty url given")
 	}
 
 	if !strings.HasPrefix(s, "http://") && !strings.HasPrefix(s, "https://") {
@@ -61,18 +60,18 @@ func ValidateURL(s string) (string, error) {
 
 	u, err := url.Parse(s)
 	if err != nil {
-		return "", fmt.Errorf("invalid url: %w", err)
+		return "", ui.Error("invalid url: %w", err)
 	}
 
 	if u.Host == "" {
-		return "", fmt.Errorf("invalid url: missing host")
+		return "", ui.Error("invalid url: missing host")
 	}
 
 	// Validate port if present
 	if port := u.Port(); port != "" {
 		n, err := strconv.Atoi(port)
 		if err != nil || n < 1 || n > 65535 {
-			return "", fmt.Errorf("invalid port number")
+			return "", ui.Error("invalid port number")
 		}
 	}
 
@@ -93,17 +92,17 @@ func ValidateURL(s string) (string, error) {
 			for _, part := range parts {
 				n, _ := strconv.Atoi(part)
 				if n < 0 || n > 255 {
-					return "", fmt.Errorf("invalid IP address")
+					return "", ui.Error("invalid IP address")
 				}
 			}
 		} else {
 			// It's a domain name — validate as hostname
 			if len(parts) < 2 {
-				return "", fmt.Errorf("invalid domain name")
+				return "", ui.Error("invalid domain name")
 			}
 			for _, part := range parts {
 				if part == "" || strings.HasPrefix(part, "-") || part == "http" || part == "https" {
-					return "", fmt.Errorf("invalid domain name")
+					return "", ui.Error("invalid domain name")
 				}
 			}
 		}
@@ -111,11 +110,11 @@ func ValidateURL(s string) (string, error) {
 		// Not an IPv4 address, validate as hostname
 		parts := strings.Split(hostname, ".")
 		if len(parts) < 2 {
-			return "", fmt.Errorf("invalid domain name")
+			return "", ui.Error("invalid domain name")
 		}
 		for _, part := range parts {
 			if part == "" || strings.HasPrefix(part, "-") || part == "http" || part == "https" {
-				return "", fmt.Errorf("invalid domain name")
+				return "", ui.Error("invalid domain name")
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -11,6 +10,5 @@ func Print(format string, a ...any) {
 }
 
 func Error(format string, a ...any) error {
-	msg := fmt.Sprintf(format, a...)
-	return errors.New(msg)
+	return fmt.Errorf(format, a...)
 }

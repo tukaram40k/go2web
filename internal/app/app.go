@@ -23,6 +23,7 @@ func Run() {
 			ui.Print("error: %v\n", err)
 			return
 		} else {
+			ui.Print("\nURL mode selected\n")
 			ui.Print("URL: %s\n", url)
 			// call url mode functions
 			return
