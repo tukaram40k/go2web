@@ -2,8 +2,8 @@ package app
 
 import (
 	"go2web/internal/cli"
-	"go2web/internal/ui"
 	"go2web/internal/tcp"
+	"go2web/internal/ui"
 )
 
 func Run() {
@@ -36,6 +36,14 @@ func Run() {
 			}
 
 			ui.Print("response:\n%s\n", string(resp))
+
+			logPath, err := ui.Log(resp)
+			if err != nil {
+				ui.Print("failed to save response log: %v\n", err)
+				return
+			}
+
+			ui.Print("saved response to: %s\n", logPath)
 
 			return
 		}
