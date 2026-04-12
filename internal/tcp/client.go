@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
@@ -11,6 +12,40 @@ type Client struct{}
 
 func NewClient() *Client {
 	return &Client{}
+}
+
+func (c *Client) dial(u *url.URL) (net.Conn, error) {
+	hostname := u.Hostname()
+	if hostname == "" {
+		return nil, fmt.Errorf("invalid url: missing host")
+	}
+
+	scheme := u.Scheme
+	if scheme == "" {
+		scheme = "http"
+	}
+
+	port := u.Port()
+
+	switch scheme {
+	case "http":
+		if port == "" {
+			port = "80"
+		}
+
+		addr := net.JoinHostPort(hostname, port)
+		return net.Dial("tcp", addr)
+	case "https":
+		if port == "" {
+			port = "443"
+		}
+
+		addr := net.JoinHostPort(hostname, port)
+		dialer := &net.Dialer{}
+		return tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{ServerName: hostname})
+	default:
+		return nil, fmt.Errorf("unsupported url scheme: %s", scheme)
+	}
 }
 
 func (c *Client) Get(rawURL string) ([]byte, error) {
@@ -29,9 +64,7 @@ func (c *Client) Get(rawURL string) ([]byte, error) {
 		requestTarget += "?" + u.RawQuery
 	}
 
-	addr := host + ":80"
-
-	conn, err := net.Dial("tcp", addr)
+	conn, err := c.dial(u)
 	if err != nil {
 		return nil, err
 	}
