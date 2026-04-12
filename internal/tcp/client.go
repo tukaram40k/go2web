@@ -1,8 +1,8 @@
 package tcp
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"net/url"
 )
@@ -44,10 +44,9 @@ func (c *Client) Get(rawURL string) ([]byte, error) {
 		return nil, err
 	}
 
-	reader := bufio.NewReader(conn)
-	resp, err := reader.ReadBytes(0) // temporary; we'll fix later
+	resp, err := io.ReadAll(conn)
 	if err != nil {
-		// EOF is expected when connection closes
+		return nil, err
 	}
 
 	return resp, nil
