@@ -20,9 +20,13 @@ func (c *Client) Get(rawURL string) ([]byte, error) {
 	}
 
 	host := u.Host
-	path := u.Path
-	if path == "" {
-		path = "/"
+	requestTarget := u.EscapedPath()
+	if requestTarget == "" {
+		requestTarget = "/"
+	}
+
+	if u.RawQuery != "" {
+		requestTarget += "?" + u.RawQuery
 	}
 
 	addr := host + ":80"
@@ -35,7 +39,7 @@ func (c *Client) Get(rawURL string) ([]byte, error) {
 
 	request := fmt.Sprintf(
 		"GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n",
-		path,
+		requestTarget,
 		host,
 	)
 
