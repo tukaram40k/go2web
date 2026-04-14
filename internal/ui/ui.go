@@ -3,6 +3,8 @@ package ui
 import (
 	"fmt"
 	"os"
+
+	"go2web/internal/parser"
 )
 
 func Print(format string, a ...any) {
@@ -12,6 +14,25 @@ func Print(format string, a ...any) {
 
 func Error(format string, a ...any) error {
 	return fmt.Errorf(format, a...)
+}
+
+func PrintParsedResponse(resp *parser.Response) {
+	if resp == nil {
+		Print("response: <nil>\n")
+		return
+	}
+
+	Print("status line:\n%s\n\n", resp.StatusLine)
+	Print("headers:\n")
+	if len(resp.HeaderFields) == 0 {
+		Print("(none)\n")
+	} else {
+		for _, header := range resp.HeaderFields {
+			Print("%s\n", header)
+		}
+	}
+
+	Print("\nbody:\n%s\n", string(resp.Body))
 }
 
 func Log(data []byte) (string, error) {
