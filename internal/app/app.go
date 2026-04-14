@@ -44,7 +44,7 @@ func Run() {
 
 			ui.PrintParsedResponse(parsedResp)
 
-			logPath, err := ui.Log(resp)
+			logPath, err := ui.Log(parsedResp)
 			if err != nil {
 				ui.Print("failed to save response log: %v\n", err)
 				return
