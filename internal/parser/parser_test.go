@@ -30,6 +30,10 @@ func TestParseCRLFResponse(t *testing.T) {
 	if !bytes.Equal(resp.Body, []byte("Hello")) {
 		t.Fatalf("unexpected body: %q", string(resp.Body))
 	}
+
+	if !resp.ResponseIsOK {
+		t.Fatal("expected ResponseIsOK to be true for 200 response")
+	}
 }
 
 func TestParseLFOnlyResponse(t *testing.T) {
@@ -50,6 +54,10 @@ func TestParseLFOnlyResponse(t *testing.T) {
 
 	if !bytes.Equal(resp.Body, []byte("Missing")) {
 		t.Fatalf("unexpected body: %q", string(resp.Body))
+	}
+
+	if resp.ResponseIsOK {
+		t.Fatal("expected ResponseIsOK to be false for 404 response")
 	}
 }
 
