@@ -2,6 +2,7 @@ package app
 
 import (
 	"go2web/internal/cli"
+	"go2web/internal/parser"
 	"go2web/internal/tcp"
 	"go2web/internal/ui"
 )
@@ -35,7 +36,13 @@ func Run() {
 				return
 			}
 
-			ui.Print("response:\n%s\n", string(resp))
+			parsedResp, err := parser.Parse(resp)
+			if err != nil {
+				ui.Print("failed to parse response: %v\n", err)
+				return
+			}
+
+			ui.PrintParsedResponse(parsedResp)
 
 			logPath, err := ui.Log(resp)
 			if err != nil {
