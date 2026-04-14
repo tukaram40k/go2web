@@ -161,8 +161,17 @@ func resolveRedirectURL(current *url.URL, location string) (*url.URL, error) {
 }
 
 func (c *Client) GetWithRedirects(rawURL string, maxRedirects int) ([]byte, error) {
+	resp, _, err := c.GetWithRedirectsMeta(rawURL, maxRedirects)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (c *Client) GetWithRedirectsMeta(rawURL string, maxRedirects int) ([]byte, int, error) {
 	if maxRedirects < 0 {
-		return nil, fmt.Errorf("max redirects cannot be negative")
+		return nil, 0, fmt.Errorf("max redirects cannot be negative")
 	}
 
 	currentURL := rawURL
@@ -171,44 +180,48 @@ func (c *Client) GetWithRedirects(rawURL string, maxRedirects int) ([]byte, erro
 	for redirectsFollowed := 0; ; redirectsFollowed++ {
 		u, err := url.Parse(currentURL)
 		if err != nil {
-			return nil, err
+			return nil, redirectsFollowed, err
 		}
 
 		normalizedURL := u.String()
 		if _, seen := visited[normalizedURL]; seen {
-			return nil, fmt.Errorf("redirect loop detected at %s", normalizedURL)
+			return nil, redirectsFollowed, fmt.Errorf("redirect loop detected at %s", normalizedURL)
 		}
 		visited[normalizedURL] = struct{}{}
 
 		resp, err := c.getOnce(u)
 		if err != nil {
-			return nil, err
+			return nil, redirectsFollowed, err
 		}
 
 		statusCode, location, err := parseStatusAndLocation(resp)
 		if err != nil {
-			return resp, nil
+			return resp, redirectsFollowed, nil
 		}
 
 		if !isRedirectStatus(statusCode) {
-			return resp, nil
+			return resp, redirectsFollowed, nil
 		}
 
 		if location == "" {
-			return nil, fmt.Errorf("redirect response missing Location header")
+			return nil, redirectsFollowed, fmt.Errorf("redirect response missing Location header")
 		}
 
 		if redirectsFollowed >= maxRedirects {
-			return nil, fmt.Errorf("maximum redirects exceeded (%d)", maxRedirects)
+			return nil, redirectsFollowed, fmt.Errorf("maximum redirects exceeded (%d)", maxRedirects)
 		}
 
 		nextURL, err := resolveRedirectURL(u, location)
 		if err != nil {
-			return nil, err
+			return nil, redirectsFollowed, err
 		}
 
 		currentURL = nextURL.String()
 	}
+}
+
+func (c *Client) GetWithMeta(rawURL string) ([]byte, int, error) {
+	return c.GetWithRedirectsMeta(rawURL, defaultMaxRedirects)
 }
 
 func (c *Client) Get(rawURL string) ([]byte, error) {
