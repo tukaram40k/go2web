@@ -20,7 +20,7 @@ func Log(data []byte) (string, error) {
 		return "", err
 	}
 
-	f, err := os.CreateTemp(logDir, "go2web-response-*.html")
+	f, err := os.CreateTemp(logDir, "go2web-response-*.txt")
 	if err != nil {
 		return "", err
 	}
