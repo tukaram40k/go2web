@@ -30,13 +30,13 @@ func Run() {
 
 			// call url mode functions
 			client := tcp.NewClient()
-			resp, err := client.Get(url)
+			resp, redirectCount, err := client.GetWithMeta(url)
 			if err != nil {
 				ui.Print("request failed: %v\n", err)
 				return
 			}
 
-			parsedResp, err := parser.Parse(resp)
+			parsedResp, err := parser.ParseWithRedirectInfo(resp, redirectCount)
 			if err != nil {
 				ui.Print("failed to parse response: %v\n", err)
 				return

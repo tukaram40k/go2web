@@ -22,7 +22,12 @@ func PrintParsedResponse(resp *parser.Response) {
 		return
 	}
 
-	Print("status line:\n%s\n\n", resp.StatusLine)
+	Print("status line:\n%s\n", resp.StatusLine)
+	Print("response ok: %t\n", resp.ResponseIsOK)
+	Print("content type: %s\n", resp.ContentType)
+	Print("redirected: %t\n", resp.IsRedirected)
+	Print("redirect count: %d\n\n", resp.RedirectCount)
+
 	Print("headers:\n")
 	if len(resp.HeaderFields) == 0 {
 		Print("(none)\n")

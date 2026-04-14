@@ -20,11 +20,11 @@ func TestParseCRLFResponse(t *testing.T) {
 	}
 
 	if len(resp.HeaderFields) != 2 {
-		t.Fatalf("expected 2 header fields, got %d", len(resp.HeaderFields))
+		t.Fatalf("expected 2 headers, got %d", len(resp.HeaderFields))
 	}
 
-	if resp.HeaderFields[0] != "Content-Type: text/html" {
-		t.Fatalf("unexpected first header: %q", resp.HeaderFields[0])
+	if resp.ContentType != "text/html" {
+		t.Fatalf("unexpected content type: %q", resp.ContentType)
 	}
 
 	if !bytes.Equal(resp.Body, []byte("Hello")) {
@@ -33,6 +33,10 @@ func TestParseCRLFResponse(t *testing.T) {
 
 	if !resp.ResponseIsOK {
 		t.Fatal("expected ResponseIsOK to be true for 200 response")
+	}
+
+	if resp.IsRedirected {
+		t.Fatal("expected IsRedirected to be false")
 	}
 }
 
@@ -67,5 +71,35 @@ func TestParseMissingSeparator(t *testing.T) {
 	_, err := parser.Parse(raw)
 	if err == nil {
 		t.Fatal("expected parse error for missing header separator")
+	}
+}
+
+func TestParseChunkedBody(t *testing.T) {
+	raw := []byte("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n\r\n5\r\nHello\r\n6\r\n World\r\n0\r\n\r\n")
+
+	resp, err := parser.Parse(raw)
+	if err != nil {
+		t.Fatalf("Parse returned unexpected error: %v", err)
+	}
+
+	if got := string(resp.Body); got != "Hello World" {
+		t.Fatalf("unexpected decoded chunked body: %q", got)
+	}
+}
+
+func TestParseWithRedirectInfo(t *testing.T) {
+	raw := []byte("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello")
+
+	resp, err := parser.ParseWithRedirectInfo(raw, 2)
+	if err != nil {
+		t.Fatalf("ParseWithRedirectInfo returned unexpected error: %v", err)
+	}
+
+	if !resp.IsRedirected {
+		t.Fatal("expected IsRedirected to be true")
+	}
+
+	if resp.RedirectCount != 2 {
+		t.Fatalf("expected RedirectCount 2, got %d", resp.RedirectCount)
 	}
 }
