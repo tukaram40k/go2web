@@ -3,6 +3,9 @@ package ui
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strconv"
+	"time"
 
 	"go2web/internal/parser"
 )
@@ -16,49 +19,48 @@ func Error(format string, a ...any) error {
 	return fmt.Errorf(format, a...)
 }
 
-func PrintParsedResponse(resp *parser.Response) {
+func formatParsedResponse(resp *parser.Response) string {
 	if resp == nil {
-		Print("response: <nil>\n")
-		return
+		return "response: <nil>\n"
 	}
 
-	Print("status line:\n%s\n", resp.StatusLine)
-	Print("response ok: %t\n", resp.ResponseIsOK)
-	Print("content type: %s\n", resp.ContentType)
-	Print("redirected: %t\n", resp.IsRedirected)
-	Print("redirect count: %d\n\n", resp.RedirectCount)
+	msg := ""
+	msg += fmt.Sprintf("status line:\n%s\n", resp.StatusLine)
+	msg += fmt.Sprintf("response ok: %t\n", resp.ResponseIsOK)
+	msg += fmt.Sprintf("content type: %s\n", resp.ContentType)
+	msg += fmt.Sprintf("redirected: %t\n", resp.IsRedirected)
+	msg += fmt.Sprintf("redirect count: %d\n\n", resp.RedirectCount)
 
-	Print("headers:\n")
+	msg += "headers:\n"
 	if len(resp.HeaderFields) == 0 {
-		Print("(none)\n")
+		msg += "(none)\n"
 	} else {
 		for _, header := range resp.HeaderFields {
-			Print("%s\n", header)
+			msg += fmt.Sprintf("%s\n", header)
 		}
 	}
 
-	Print("\nbody:\n%s\n", string(resp.Body))
+	msg += fmt.Sprintf("\nbody:\n%s\n", string(resp.Body))
+
+	return msg
 }
 
-func Log(data []byte) (string, error) {
+func PrintParsedResponse(resp *parser.Response) {
+	Print("%s", formatParsedResponse(resp))
+}
+
+func Log(resp *parser.Response) (string, error) {
 	logDir := ".go2web"
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return "", err
 	}
 
-	f, err := os.CreateTemp(logDir, "go2web-response-*.txt")
-	if err != nil {
+	fileName := strconv.FormatInt(time.Now().UnixNano(), 10) + ".txt"
+	filePath := filepath.Join(logDir, fileName)
+
+	if err := os.WriteFile(filePath, []byte(formatParsedResponse(resp)), 0o644); err != nil {
 		return "", err
 	}
 
-	if _, err := f.Write(data); err != nil {
-		f.Close()
-		return "", err
-	}
-
-	if err := f.Close(); err != nil {
-		return "", err
-	}
-
-	return f.Name(), nil
+	return filePath, nil
 }
