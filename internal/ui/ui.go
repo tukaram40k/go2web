@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go2web/internal/parser"
+	"go2web/internal/search"
 )
 
 func Print(format string, a ...any) {
@@ -47,6 +48,28 @@ func formatParsedResponse(resp *parser.Response) string {
 
 func PrintParsedResponse(resp *parser.Response) {
 	Print("%s", formatParsedResponse(resp))
+}
+
+func PrintSearchResults(term string, resp *parser.Response, results []search.Result) {
+	Print("search term: %s\n", term)
+	if resp != nil {
+		Print("status line: %s\n", resp.StatusLine)
+		Print("response ok: %t\n", resp.ResponseIsOK)
+		Print("content type: %s\n", resp.ContentType)
+		Print("redirected: %t\n", resp.IsRedirected)
+		Print("redirect count: %d\n", resp.RedirectCount)
+	}
+
+	Print("\ntop results:\n")
+	if len(results) == 0 {
+		Print("no results found\n")
+		return
+	}
+
+	for i, r := range results {
+		Print("%d. %s\n", i+1, r.Title)
+		Print("   %s\n", r.URL)
+	}
 }
 
 func Log(resp *parser.Response) (string, error) {

@@ -1,9 +1,12 @@
 package app
 
 import (
+	"strings"
+
 	"go2web/internal/cli"
-	"go2web/internal/parser"
 	"go2web/internal/tcp"
+	"go2web/internal/parser"
+	"go2web/internal/search"
 	"go2web/internal/ui"
 )
 
@@ -57,6 +60,44 @@ func Run() {
 	}
 
 	if flags.Search != "" {
-		// call search mode functions
+		searchTerm := strings.TrimSpace(flags.Search)
+		searchURL, err := search.BuildURL(searchTerm)
+		if err != nil {
+			ui.Print("invalid search term: %v\n", err)
+			return
+		}
+
+		client := tcp.NewClient()
+		resp, redirectCount, err := client.GetWithMeta(searchURL)
+		if err != nil {
+			ui.Print("search request failed: %v\n", err)
+			return
+		}
+
+		parsedResp, err := parser.ParseWithRedirectInfo(resp, redirectCount)
+		if err != nil {
+			ui.Print("failed to parse search response: %v\n", err)
+			return
+		}
+
+		if !parsedResp.ResponseIsOK {
+			ui.Print("search request was not successful\n")
+			ui.PrintParsedResponse(parsedResp)
+			return
+		}
+
+		if !strings.Contains(strings.ToLower(parsedResp.ContentType), "text/html") {
+			ui.Print("unexpected search response content type: %s\n", parsedResp.ContentType)
+			return
+		}
+
+		results, err := search.ExtractResults(parsedResp.Body, 10)
+		if err != nil {
+			ui.Print("failed to extract search results: %v\n", err)
+			return
+		}
+
+		ui.PrintSearchResults(searchTerm, parsedResp, results)
+		return
 	}
 }
