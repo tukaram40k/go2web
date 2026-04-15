@@ -13,10 +13,6 @@ import (
 func Run() {
 	flags := cli.GetFlags()
 
-	ui.Print("URL: %s\n", flags.URL)
-	ui.Print("Search: %s\n", flags.Search)
-	ui.Print("Help: %t\n", flags.Help)
-
 	if flags.Help || (flags.URL == "" && flags.Search == "") {
 		cli.PrintHelp()
 		return
