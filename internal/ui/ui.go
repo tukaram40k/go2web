@@ -42,6 +42,10 @@ var (
 	metaValueStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#0F172A"))
 
+	panelStyle = lipgloss.NewStyle().
+			Margin(0, 0, 0, 0).
+			Padding(0, 1)
+
 	tableCellStyle = lipgloss.NewStyle().
 			Padding(0, 1)
 
@@ -110,11 +114,6 @@ func PrintParsedResponse(resp *parser.Response) {
 		statusBadge = okBadgeStyle.Render("OK")
 	}
 
-	// redirectValue := "no"
-	// if resp.IsRedirected {
-	// 	redirectValue = fmt.Sprintf("yes (%d)", resp.RedirectCount)
-	// }
-
 	contentTypeStyle := metaValueStyle
 	if strings.Contains(strings.ToLower(resp.ContentType), "text/html") {
 		contentTypeStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#0369A1"))
@@ -124,12 +123,6 @@ func PrintParsedResponse(resp *parser.Response) {
 	if len(resp.HeaderFields) > 0 {
 		headersText = strings.Join(resp.HeaderFields, "\n")
 	}
-
-	statusLine := fmt.Sprintf(
-		"%s %s",
-		titleStyle.Render("URL Response"),
-		statusBadge,
-	)
 
 	statusValue := resp.StatusLine
 	if resp.ResponseIsOK {
@@ -162,39 +155,60 @@ func PrintParsedResponse(resp *parser.Response) {
 			[]string{"redirect count", redirectCountValue},
 		)
 
-	metaTableText := metaTable.String()
+	urlStatusBlock := lipgloss.JoinVertical(
+		lipgloss.Center,
+		lipgloss.JoinHorizontal(lipgloss.Center, titleStyle.Render("URL Response"), " ", statusBadge),
+	)
+	urlStatusBlock = panelStyle.Render(urlStatusBlock)
+
+	tableBlock := lipgloss.JoinVertical(
+		lipgloss.Center,
+		metaTable.String(),
+	)
+	tableBlock = panelStyle.Render(tableBlock)
 
 	headersBlock := lipgloss.JoinVertical(
 		lipgloss.Center,
-		metaLabelStyle.Render("headers"),
 		headersBoxStyle.Render(headersText),
 	)
+	headersBlock = panelStyle.Render(headersBlock)
 
 	bodyBlock := lipgloss.JoinVertical(
 		lipgloss.Center,
-		metaLabelStyle.Render("body"),
 		bodyPlaceholderStyle.Render("[body preview placeholder for upcoming renderer]"),
 	)
+	bodyBlock = panelStyle.Render(bodyBlock)
 
-	layoutWidth := lipgloss.Width(metaTableText)
-	if w := lipgloss.Width(headersBlock); w > layoutWidth {
-		layoutWidth = w
+	out := strings.Join([]string{
+		urlStatusBlock,
+		tableBlock,
+		headersBlock,
+		bodyBlock,
+	}, "\n\n")
+
+	canvasWidth := lipgloss.Width(out) + 12
+	if canvasWidth < 96 {
+		canvasWidth = 96
 	}
-	if w := lipgloss.Width(bodyBlock); w > layoutWidth {
-		layoutWidth = w
+	canvasHeight := lipgloss.Height(out) + 6
+	if canvasHeight < 28 {
+		canvasHeight = 28
 	}
 
-	centerSectionStyle := lipgloss.NewStyle().Width(layoutWidth).Align(lipgloss.Center)
+	backgroundStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#334155"))
 
-	out := lipgloss.JoinVertical(
-		lipgloss.Left,
-		statusLine,
-		centerSectionStyle.Render(metaTableText),
-		centerSectionStyle.Render(headersBlock),
-		centerSectionStyle.Render(bodyBlock),
+	rendered := lipgloss.Place(
+		canvasWidth,
+		canvasHeight,
+		lipgloss.Center,
+		lipgloss.Center,
+		out,
+		lipgloss.WithWhitespaceChars("."),
+		lipgloss.WithWhitespaceStyle(backgroundStyle),
 	)
 
-	lipgloss.Print(out + "\n")
+	lipgloss.Print(rendered + "\n")
 }
 
 func PrintSearchResults(term string, resp *parser.Response, results []search.Result) {
