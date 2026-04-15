@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"go2web/internal/cli"
-	"go2web/internal/tcp"
 	"go2web/internal/parser"
 	"go2web/internal/search"
+	"go2web/internal/tcp"
 	"go2web/internal/ui"
 )
 
@@ -24,9 +24,6 @@ func Run() {
 			ui.Print("error: %v\n", err)
 			return
 		} else {
-			ui.Print("\nURL mode selected\n")
-			ui.Print("URL: %s\n", url)
-
 			// call url mode functions
 			client := tcp.NewClient()
 			resp, redirectCount, err := client.GetWithMeta(url)

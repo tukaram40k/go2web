@@ -31,10 +31,10 @@ var (
 
 	metaLabelStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("#475569"))
+			Foreground(lipgloss.Color("#e9eff9"))
 
 	metaValueStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#0F172A"))
+			Foreground(lipgloss.Color("#e9eff9"))
 
 	panelStyle = lipgloss.NewStyle().
 			Margin(0, 0, 0, 0).
@@ -44,25 +44,25 @@ var (
 			Padding(0, 1)
 
 	tableOddRowStyle = tableCellStyle.
-				Foreground(lipgloss.Color("#334155"))
+				Foreground(lipgloss.Color("#e9eff9"))
 
 	tableEvenRowStyle = tableCellStyle.
-				Foreground(lipgloss.Color("#475569"))
+				Foreground(lipgloss.Color("#e9eff9"))
 
 	headersBoxStyle = lipgloss.NewStyle().
 			Padding(0, 1)
 
 	headersBlockStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("#94A3B8"))
+				BorderForeground(lipgloss.Color("#8921d8"))
 
 	bodyPlaceholderStyle = lipgloss.NewStyle().
 				Italic(true).
-				Foreground(lipgloss.Color("#64748B"))
+				Foreground(lipgloss.Color("#e9eff9"))
 
 	bodyBlockStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#CBD5E1"))
+			BorderForeground(lipgloss.Color("#8921d8"))
 )
 
 const maxResponseLineLength = 80
@@ -194,7 +194,7 @@ func PrintParsedResponse(resp *parser.Response) {
 		Border(lipgloss.NormalBorder()).
 		BorderHeader(false).
 		BorderRow(true).
-		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#94A3B8"))).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#8921d8"))).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			switch {
 			case row%2 == 0:
@@ -257,7 +257,7 @@ func PrintParsedResponse(resp *parser.Response) {
 	if canvasWidth < 96 {
 		canvasWidth = 96
 	}
-	canvasHeight := lipgloss.Height(out) + 6
+	canvasHeight := lipgloss.Height(out) + 4
 	if canvasHeight < 28 {
 		canvasHeight = 28
 	}
