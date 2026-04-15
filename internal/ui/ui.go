@@ -17,12 +17,6 @@ import (
 )
 
 var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#F8FAFC")).
-			Background(lipgloss.Color("#1E293B")).
-			Padding(0, 1)
-
 	okBadgeStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("#052E16")).
@@ -56,16 +50,19 @@ var (
 				Foreground(lipgloss.Color("#475569"))
 
 	headersBoxStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#94A3B8")).
 			Padding(0, 1)
+
+	headersBlockStyle = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#94A3B8"))
 
 	bodyPlaceholderStyle = lipgloss.NewStyle().
 				Italic(true).
-				Foreground(lipgloss.Color("#64748B")).
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("#CBD5E1")).
-				Padding(0, 1)
+				Foreground(lipgloss.Color("#64748B"))
+
+	bodyBlockStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#CBD5E1"))
 )
 
 const maxResponseLineLength = 80
@@ -177,10 +174,15 @@ func PrintParsedResponse(resp *parser.Response) {
 	}
 
 	statusValue := resp.StatusLine
+
+	urlResponseBlockStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder())
 	if resp.ResponseIsOK {
-		statusValue = okBadgeStyle.Render("OK") + " " + statusValue
+		urlResponseBlockStyle = urlResponseBlockStyle.
+			BorderForeground(lipgloss.Color("#15803D"))
 	} else {
-		statusValue = errBadgeStyle.Render("ERROR") + " " + statusValue
+		urlResponseBlockStyle = urlResponseBlockStyle.
+			BorderForeground(lipgloss.Color("#B91C1C"))
 	}
 
 	redirectCountValue := strconv.Itoa(resp.RedirectCount)
@@ -209,7 +211,7 @@ func PrintParsedResponse(resp *parser.Response) {
 
 	urlStatusBlock := lipgloss.JoinVertical(
 		lipgloss.Center,
-		lipgloss.JoinHorizontal(lipgloss.Center, titleStyle.Render("URL Response"), " ", statusBadge),
+		lipgloss.JoinHorizontal(lipgloss.Center, "URL Response", " ", statusBadge),
 	)
 	urlStatusBlock = panelStyle.Render(urlStatusBlock)
 
@@ -230,6 +232,19 @@ func PrintParsedResponse(resp *parser.Response) {
 		bodyPlaceholderStyle.Render("[body preview placeholder for upcoming renderer]"),
 	)
 	bodyBlock = panelStyle.Render(bodyBlock)
+
+	sharedContentWidth := lipgloss.Width(headersBlock)
+	if w := lipgloss.Width(bodyBlock); w > sharedContentWidth {
+		sharedContentWidth = w
+	}
+
+	stretchStyle := lipgloss.NewStyle().Width(sharedContentWidth).Align(lipgloss.Center)
+	headersBlock = stretchStyle.Render(headersBlock)
+	bodyBlock = stretchStyle.Render(bodyBlock)
+	urlStatusBlock = stretchStyle.Render(urlStatusBlock)
+	headersBlock = headersBlockStyle.Render(headersBlock)
+	bodyBlock = bodyBlockStyle.Render(bodyBlock)
+	urlStatusBlock = urlResponseBlockStyle.Render(urlStatusBlock)
 
 	out := strings.Join([]string{
 		urlStatusBlock,
