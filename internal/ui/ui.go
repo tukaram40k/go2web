@@ -11,6 +11,8 @@ import (
 	"go2web/internal/parser"
 	"go2web/internal/search"
 
+	"charm.land/lipgloss/v2/table"
+
 	"charm.land/lipgloss/v2"
 )
 
@@ -39,6 +41,15 @@ var (
 
 	metaValueStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#0F172A"))
+
+	tableCellStyle = lipgloss.NewStyle().
+			Padding(0, 1)
+
+	tableOddRowStyle = tableCellStyle.
+				Foreground(lipgloss.Color("#334155"))
+
+	tableEvenRowStyle = tableCellStyle.
+				Foreground(lipgloss.Color("#475569"))
 
 	headersBoxStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
@@ -99,10 +110,10 @@ func PrintParsedResponse(resp *parser.Response) {
 		statusBadge = okBadgeStyle.Render("OK")
 	}
 
-	redirectValue := "no"
-	if resp.IsRedirected {
-		redirectValue = fmt.Sprintf("yes (%d)", resp.RedirectCount)
-	}
+	// redirectValue := "no"
+	// if resp.IsRedirected {
+	// 	redirectValue = fmt.Sprintf("yes (%d)", resp.RedirectCount)
+	// }
 
 	contentTypeStyle := metaValueStyle
 	if strings.Contains(strings.ToLower(resp.ContentType), "text/html") {
@@ -115,18 +126,41 @@ func PrintParsedResponse(resp *parser.Response) {
 	}
 
 	statusLine := fmt.Sprintf(
-		"%s %s\n%s",
+		"%s %s",
 		titleStyle.Render("URL Response"),
 		statusBadge,
-		resp.StatusLine,
 	)
 
-	metaLine := lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		metaLabelStyle.Render("content type: ")+contentTypeStyle.Render(resp.ContentType),
-		"   ",
-		metaLabelStyle.Render("redirected: ")+metaValueStyle.Render(redirectValue),
-	)
+	statusValue := resp.StatusLine
+	if resp.ResponseIsOK {
+		statusValue = okBadgeStyle.Render("OK") + " " + statusValue
+	} else {
+		statusValue = errBadgeStyle.Render("ERROR") + " " + statusValue
+	}
+
+	redirectCountValue := strconv.Itoa(resp.RedirectCount)
+	if resp.IsRedirected {
+		redirectCountValue = redirectCountValue + " (redirected)"
+	}
+
+	metaTable := table.New().
+		Border(lipgloss.NormalBorder()).
+		BorderHeader(false).
+		BorderRow(true).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#94A3B8"))).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			switch {
+			case row%2 == 0:
+				return tableEvenRowStyle
+			default:
+				return tableOddRowStyle
+			}
+		}).
+		Rows(
+			[]string{"status line", statusValue},
+			[]string{"content type", contentTypeStyle.Render(resp.ContentType)},
+			[]string{"redirect count", redirectCountValue},
+		)
 
 	headersBlock := lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -143,7 +177,7 @@ func PrintParsedResponse(resp *parser.Response) {
 	out := lipgloss.JoinVertical(
 		lipgloss.Left,
 		statusLine,
-		metaLine,
+		metaTable.String(),
 		headersBlock,
 		bodyBlock,
 	)
