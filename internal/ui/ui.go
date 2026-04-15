@@ -162,24 +162,36 @@ func PrintParsedResponse(resp *parser.Response) {
 			[]string{"redirect count", redirectCountValue},
 		)
 
+	metaTableText := metaTable.String()
+
 	headersBlock := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		metaLabelStyle.Render("headers"),
 		headersBoxStyle.Render(headersText),
 	)
 
 	bodyBlock := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		metaLabelStyle.Render("body"),
 		bodyPlaceholderStyle.Render("[body preview placeholder for upcoming renderer]"),
 	)
 
+	layoutWidth := lipgloss.Width(metaTableText)
+	if w := lipgloss.Width(headersBlock); w > layoutWidth {
+		layoutWidth = w
+	}
+	if w := lipgloss.Width(bodyBlock); w > layoutWidth {
+		layoutWidth = w
+	}
+
+	centerSectionStyle := lipgloss.NewStyle().Width(layoutWidth).Align(lipgloss.Center)
+
 	out := lipgloss.JoinVertical(
 		lipgloss.Left,
 		statusLine,
-		metaTable.String(),
-		headersBlock,
-		bodyBlock,
+		centerSectionStyle.Render(metaTableText),
+		centerSectionStyle.Render(headersBlock),
+		centerSectionStyle.Render(bodyBlock),
 	)
 
 	lipgloss.Print(out + "\n")
