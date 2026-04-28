@@ -13,7 +13,7 @@ import (
 func Run() {
 	flags := cli.GetFlags()
 
-	if flags.Help || (flags.URL == "" && flags.Search == "") {
+	if flags.Help || (flags.URL == "" && flags.Search == "") || (flags.URL != "" && flags.Search != "") {
 		cli.PrintHelp()
 		return
 	}
