@@ -170,7 +170,7 @@ func PrintParsedResponse(resp *parser.Response) {
 		lipgloss.Center,
 		lipgloss.Center,
 		out,
-		lipgloss.WithWhitespaceChars("{}"),
+		lipgloss.WithWhitespaceChars("."),
 		lipgloss.WithWhitespaceStyle(backgroundStyle),
 	)
 
