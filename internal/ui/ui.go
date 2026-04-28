@@ -334,6 +334,41 @@ func formatSearchResults(results []search.Result) string {
 	return builder.String()
 }
 
+func formatSearchLog(term string, resp *parser.Response, results []search.Result) string {
+	var builder strings.Builder
+	if resp != nil {
+		builder.WriteString(formatParsedResponse(resp))
+		builder.WriteString("\n")
+	}
+
+	term = strings.TrimSpace(term)
+	if term != "" {
+		builder.WriteString(fmt.Sprintf("search term: %s\n", term))
+	}
+
+	builder.WriteString("\nresults:\n")
+	if len(results) == 0 {
+		builder.WriteString("no results found\n")
+		return builder.String()
+	}
+
+	for i, r := range results {
+		title := strings.TrimSpace(r.Title)
+		urlValue := strings.TrimSpace(r.URL)
+
+		if title == "" {
+			title = "(untitled)"
+		}
+
+		builder.WriteString(fmt.Sprintf("%d. %s\n", i+1, title))
+		if urlValue != "" {
+			builder.WriteString(fmt.Sprintf("   %s\n", urlValue))
+		}
+	}
+
+	return builder.String()
+}
+
 func Log(resp *parser.Response) (string, error) {
 	logDir := ".go2web"
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
@@ -344,6 +379,23 @@ func Log(resp *parser.Response) (string, error) {
 	filePath := filepath.Join(logDir, fileName)
 
 	if err := os.WriteFile(filePath, []byte(formatParsedResponse(resp)), 0o644); err != nil {
+		return "", err
+	}
+
+	return filePath, nil
+}
+
+func LogSearchResults(term string, resp *parser.Response, results []search.Result) (string, error) {
+	logDir := ".go2web"
+	if err := os.MkdirAll(logDir, 0o755); err != nil {
+		return "", err
+	}
+
+	fileName := "search-" + strconv.FormatInt(time.Now().UnixNano(), 10) + ".txt"
+	filePath := filepath.Join(logDir, fileName)
+
+	logText := formatSearchLog(term, resp, results)
+	if err := os.WriteFile(filePath, []byte(logText), 0o644); err != nil {
 		return "", err
 	}
 
