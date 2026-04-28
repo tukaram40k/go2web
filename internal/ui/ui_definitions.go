@@ -13,6 +13,8 @@ const (
 	colorTextBackground = "#5b435a"
 
 	colorBorderPrimary = "#8921d8"
+	colorBorderHeaders = "#3b82f6"
+	colorBorderBody    = "#10b981"
 	colorBorderOK      = "#15803D"
 	colorBorderError   = "#B91C1C"
 )
@@ -56,12 +58,12 @@ var (
 
 	headersBlockStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color(colorBorderPrimary))
+				BorderForeground(lipgloss.Color(colorBorderHeaders))
 
 	bodyTextStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(colorTextPrimary))
 
 	bodyBlockStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color(colorBorderPrimary))
+			BorderForeground(lipgloss.Color(colorBorderBody))
 )
