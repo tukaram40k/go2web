@@ -178,25 +178,160 @@ func PrintParsedResponse(resp *parser.Response) {
 }
 
 func PrintSearchResults(term string, resp *parser.Response, results []search.Result) {
-	Print("search term: %s\n", term)
 	if resp != nil {
-		Print("status line: %s\n", resp.StatusLine)
-		Print("response ok: %t\n", resp.ResponseIsOK)
-		Print("content type: %s\n", resp.ContentType)
-		Print("redirected: %t\n", resp.IsRedirected)
-		Print("redirect count: %d\n", resp.RedirectCount)
+		resp = normalizedResponseLines(resp, maxResponseLineLength)
 	}
 
-	Print("\ntop results:\n")
-	if len(results) == 0 {
-		Print("no results found\n")
-		return
+	statusBadge := errBadgeStyle.Render("ERROR")
+	if resp != nil && resp.ResponseIsOK {
+		statusBadge = okBadgeStyle.Render("OK")
 	}
+
+	searchStatusBlockStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder())
+	if resp != nil && resp.ResponseIsOK {
+		searchStatusBlockStyle = searchStatusBlockStyle.
+			BorderForeground(lipgloss.Color(colorBorderOK))
+	} else {
+		searchStatusBlockStyle = searchStatusBlockStyle.
+			BorderForeground(lipgloss.Color(colorBorderError))
+	}
+
+	searchTitle := "Search Results"
+	if strings.TrimSpace(term) != "" {
+		searchTitle = fmt.Sprintf("Search Results: %s", term)
+	}
+
+	searchStatusBlock := lipgloss.JoinVertical(
+		lipgloss.Center,
+		lipgloss.JoinHorizontal(lipgloss.Center, searchTitle, " ", statusBadge),
+	)
+	searchStatusBlock = panelStyle.Render(searchStatusBlock)
+
+	statusValue := "unknown"
+	contentTypeValue := "unknown"
+	redirectCountValue := "0"
+
+	if resp != nil {
+		statusValue = resp.StatusLine
+		contentTypeValue = resp.ContentType
+		redirectCountValue = strconv.Itoa(resp.RedirectCount)
+		if resp.IsRedirected {
+			redirectCountValue = redirectCountValue + " (redirected)"
+		}
+	}
+
+	resultCountValue := strconv.Itoa(len(results))
+
+	metaTable := table.New().
+		Border(lipgloss.NormalBorder()).
+		BorderHeader(false).
+		BorderRow(true).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(colorBorderPrimary))).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			switch {
+			case row%2 == 0:
+				return tableEvenRowStyle
+			default:
+				return tableOddRowStyle
+			}
+		}).
+		Rows(
+			[]string{"status line", statusValue},
+			[]string{"content type", metaValueStyle.Render(contentTypeValue)},
+			[]string{"redirect count", redirectCountValue},
+			[]string{"results", resultCountValue},
+		)
+
+	resultsText := formatSearchResults(results)
+	resultsBlock := lipgloss.JoinVertical(
+		lipgloss.Center,
+		resultsText,
+	)
+	resultsBlock = panelStyle.Render(resultsBlock)
+
+	metaBlock := lipgloss.JoinVertical(
+		lipgloss.Center,
+		metaTable.String(),
+	)
+	metaBlock = panelStyle.Render(metaBlock)
+
+	sharedContentWidth := lipgloss.Width(resultsBlock)
+	if w := lipgloss.Width(searchStatusBlock); w > sharedContentWidth {
+		sharedContentWidth = w
+	}
+
+	stretchStyle := lipgloss.NewStyle().Width(sharedContentWidth).Align(lipgloss.Center)
+	searchStatusBlock = stretchStyle.Render(searchStatusBlock)
+	resultsBlock = stretchStyle.Render(resultsBlock)
+
+	searchStatusBlock = searchStatusBlockStyle.Render(searchStatusBlock)
+	resultsBlock = searchResultsBlockStyle.Render(resultsBlock)
+
+	out := strings.Join([]string{
+		searchStatusBlock,
+		metaBlock,
+		resultsBlock,
+	}, "\n\n")
+
+	canvasWidth := lipgloss.Width(out) + 12
+	if canvasWidth < 96 {
+		canvasWidth = 96
+	}
+	canvasHeight := lipgloss.Height(out) + 4
+	if canvasHeight < 24 {
+		canvasHeight = 24
+	}
+
+	backgroundStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(colorTextBackground))
+
+	rendered := lipgloss.Place(
+		canvasWidth,
+		canvasHeight,
+		lipgloss.Center,
+		lipgloss.Center,
+		out,
+		lipgloss.WithWhitespaceChars("."),
+		lipgloss.WithWhitespaceStyle(backgroundStyle),
+	)
+
+	lipgloss.Print(rendered + "\n")
+}
+
+func formatSearchResults(results []search.Result) string {
+	if len(results) == 0 {
+		return searchResultTitleStyle.Render("no results found")
+	}
+
+	var builder strings.Builder
 
 	for i, r := range results {
-		Print("%d. %s\n", i+1, r.Title)
-		Print("   %s\n", r.URL)
+		title := strings.TrimSpace(r.Title)
+		urlValue := strings.TrimSpace(r.URL)
+
+		if title == "" {
+			title = "(untitled)"
+		}
+
+		title = ensureMaxLineLength(title, maxResponseLineLength)
+		urlValue = ensureMaxLineLength(urlValue, maxResponseLineLength)
+
+		if i > 0 {
+			builder.WriteString("\n")
+		}
+
+		builder.WriteString(fmt.Sprintf("%d. ", i+1))
+		builder.WriteString(searchResultTitleStyle.Render(title))
+
+		if urlValue != "" {
+			builder.WriteString("\n   ")
+			builder.WriteString(searchResultURLStyle.Render(urlValue))
+			builder.WriteString("\n")
+		}
 	}
+
+	return builder.String()
 }
 
 func Log(resp *parser.Response) (string, error) {

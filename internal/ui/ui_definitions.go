@@ -6,7 +6,7 @@ const (
 	maxResponseLineLength = 80
 
 	colorTextPrimary    = "#b7d0f8"
-	colorTextSecondary  = "#b7f8f4"
+	colorTextSecondary  = "#a3faf4"
 	colorTextOKBadge    = "#052E16"
 	colorTextErrorBadge = "#450A0A"
 	colorTextHTML       = "#0369A1"
@@ -15,6 +15,7 @@ const (
 	colorBorderPrimary = "#8921d8"
 	colorBorderHeaders = "#3b82f6"
 	colorBorderBody    = "#10b981"
+	colorBorderSearch  = "#f59e0b"
 	colorBorderOK      = "#15803D"
 	colorBorderError   = "#B91C1C"
 )
@@ -66,4 +67,15 @@ var (
 	bodyBlockStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color(colorBorderBody))
+
+	searchResultsBlockStyle = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color(colorBorderSearch))
+
+	searchResultTitleStyle = lipgloss.NewStyle().
+				Bold(true).
+				Foreground(lipgloss.Color(colorTextPrimary))
+
+	searchResultURLStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(colorTextSecondary))
 )
