@@ -47,7 +47,8 @@ func formatParsedResponse(resp *parser.Response) string {
 		}
 	}
 
-	msg += fmt.Sprintf("\nbody:\n%s\n", string(resp.Body))
+	bodyText := renderBody(resp)
+	msg += fmt.Sprintf("\nbody:\n%s\n", bodyText)
 
 	return msg
 }
@@ -124,9 +125,10 @@ func PrintParsedResponse(resp *parser.Response) {
 	)
 	headersBlock = panelStyle.Render(headersBlock)
 
+	bodyText := renderBody(resp)
 	bodyBlock := lipgloss.JoinVertical(
 		lipgloss.Center,
-		bodyPlaceholderStyle.Render("[body preview placeholder for upcoming renderer]"),
+		bodyTextStyle.Render(bodyText),
 	)
 	bodyBlock = panelStyle.Render(bodyBlock)
 

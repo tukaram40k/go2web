@@ -58,9 +58,8 @@ var (
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(lipgloss.Color(colorBorderPrimary))
 
-	bodyPlaceholderStyle = lipgloss.NewStyle().
-				Italic(true).
-				Foreground(lipgloss.Color(colorTextPrimary))
+	bodyTextStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(colorTextPrimary))
 
 	bodyBlockStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
