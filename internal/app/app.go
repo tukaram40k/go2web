@@ -91,6 +91,14 @@ func Run() {
 		}
 
 		ui.PrintSearchResults(searchTerm, parsedResp, results)
+
+		logPath, err := ui.LogSearchResults(searchTerm, parsedResp, results)
+		if err != nil {
+			ui.Print("failed to save search log: %v\n", err)
+			return
+		}
+
+		ui.Print("saved search log to: %s\n", logPath)
 		return
 	}
 }
