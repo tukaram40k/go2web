@@ -19,6 +19,7 @@ type Response struct {
 	IsRedirected  bool
 	RedirectCount int
 	ContentType   string
+	Cached        bool
 }
 
 func parseStatusCode(statusLine string) (int, error) {

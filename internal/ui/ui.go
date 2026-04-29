@@ -37,6 +37,7 @@ func formatParsedResponse(resp *parser.Response) string {
 	msg += fmt.Sprintf("content type: %s\n", resp.ContentType)
 	msg += fmt.Sprintf("redirected: %t\n", resp.IsRedirected)
 	msg += fmt.Sprintf("redirect count: %d\n\n", resp.RedirectCount)
+	msg += fmt.Sprintf("cached: %t\n\n", resp.Cached)
 
 	msg += "headers:\n"
 	if len(resp.HeaderFields) == 0 {
@@ -84,9 +85,6 @@ func PrintParsedResponse(resp *parser.Response) {
 	}
 
 	redirectCountValue := strconv.Itoa(resp.RedirectCount)
-	if resp.IsRedirected {
-		redirectCountValue = redirectCountValue + " (redirected)"
-	}
 
 	metaTable := table.New().
 		Border(lipgloss.NormalBorder()).
@@ -105,6 +103,7 @@ func PrintParsedResponse(resp *parser.Response) {
 			[]string{"status line", statusValue},
 			[]string{"content type", metaValueStyle.Render(resp.ContentType)},
 			[]string{"redirect count", redirectCountValue},
+			[]string{"cached", strconv.FormatBool(resp.Cached)},
 		)
 
 	urlStatusBlock := lipgloss.JoinVertical(
@@ -211,11 +210,13 @@ func PrintSearchResults(term string, resp *parser.Response, results []search.Res
 	statusValue := "unknown"
 	contentTypeValue := "unknown"
 	redirectCountValue := "0"
+	cachedValue := "false"
 
 	if resp != nil {
 		statusValue = resp.StatusLine
 		contentTypeValue = resp.ContentType
 		redirectCountValue = strconv.Itoa(resp.RedirectCount)
+		cachedValue = strconv.FormatBool(resp.Cached)
 		if resp.IsRedirected {
 			redirectCountValue = redirectCountValue + " (redirected)"
 		}
@@ -240,6 +241,7 @@ func PrintSearchResults(term string, resp *parser.Response, results []search.Res
 			[]string{"status line", statusValue},
 			[]string{"content type", metaValueStyle.Render(contentTypeValue)},
 			[]string{"redirect count", redirectCountValue},
+			[]string{"cached", cachedValue},
 			[]string{"results", resultCountValue},
 		)
 
