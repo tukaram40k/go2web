@@ -2,6 +2,7 @@ package app
 
 import (
 	"strings"
+	"time"
 
 	"go2web/internal/cache"
 	"go2web/internal/cli"
@@ -25,7 +26,7 @@ func Run() {
 			ui.Print("error: %v\n", err)
 			return
 		} else {
-			resp, redirectCount, cached, cacheErr, err := fetchWithCache(url)
+			resp, redirectCount, cached, cacheAgeMinutes, cacheErr, err := fetchWithCache(url)
 			if err != nil {
 				ui.Print("request failed: %v\n", err)
 				return
@@ -41,6 +42,7 @@ func Run() {
 				return
 			}
 			parsedResp.Cached = cached
+			parsedResp.CacheAgeMinutes = cacheAgeMinutes
 
 			ui.PrintParsedResponse(parsedResp)
 
@@ -64,7 +66,7 @@ func Run() {
 			return
 		}
 
-		resp, redirectCount, cached, cacheErr, err := fetchWithCache(searchURL)
+		resp, redirectCount, cached, cacheAgeMinutes, cacheErr, err := fetchWithCache(searchURL)
 		if err != nil {
 			ui.Print("search request failed: %v\n", err)
 			return
@@ -80,6 +82,7 @@ func Run() {
 			return
 		}
 		parsedResp.Cached = cached
+		parsedResp.CacheAgeMinutes = cacheAgeMinutes
 
 		if !parsedResp.ResponseIsOK {
 			ui.Print("search request was not successful\n")
@@ -111,19 +114,26 @@ func Run() {
 	}
 }
 
-func fetchWithCache(rawURL string) ([]byte, int, bool, error, error) {
+func fetchWithCache(rawURL string) ([]byte, int, bool, int, error, error) {
 	if cachedBody, entry, found, err := cache.Load(rawURL); err != nil {
-		return nil, 0, false, nil, err
+		return nil, 0, false, 0, nil, err
 	} else if found {
-		return cachedBody, entry.RedirectCount, true, nil, nil
+		ageMinutes := 0
+		if !entry.CachedAt.IsZero() {
+			age := time.Since(entry.CachedAt)
+			if age > 0 {
+				ageMinutes = int(age.Minutes())
+			}
+		}
+		return cachedBody, entry.RedirectCount, true, ageMinutes, nil, nil
 	}
 
 	client := tcp.NewClient()
 	body, redirectCount, err := client.GetWithMeta(rawURL)
 	if err != nil {
-		return nil, 0, false, nil, err
+		return nil, 0, false, 0, nil, err
 	}
 
 	cacheErr := cache.Store(rawURL, body, redirectCount)
-	return body, redirectCount, false, cacheErr, nil
+	return body, redirectCount, false, 0, cacheErr, nil
 }
