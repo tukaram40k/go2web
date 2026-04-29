@@ -12,14 +12,15 @@ import (
 )
 
 type Response struct {
-	StatusLine    string
-	HeaderFields  []string
-	Body          []byte
-	ResponseIsOK  bool
-	IsRedirected  bool
-	RedirectCount int
-	ContentType   string
-	Cached        bool
+	StatusLine      string
+	HeaderFields    []string
+	Body            []byte
+	ResponseIsOK    bool
+	IsRedirected    bool
+	RedirectCount   int
+	ContentType     string
+	Cached          bool
+	CacheAgeMinutes int
 }
 
 func parseStatusCode(statusLine string) (int, error) {

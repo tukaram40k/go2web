@@ -4,13 +4,15 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 )
 
-const cacheDir = ".go2web/cache"
+const (
+	cacheDir = ".go2web/cache"
+	cacheTTL = 5 * time.Minute
+)
 
 type Entry struct {
 	URL           string    `json:"url"`
@@ -35,14 +37,29 @@ func Load(rawURL string) ([]byte, Entry, bool, error) {
 		return nil, Entry{}, false, err
 	}
 
-	entry := Entry{URL: rawURL}
 	metaBytes, err := os.ReadFile(metaPath)
-	if err == nil {
-		if err := json.Unmarshal(metaBytes, &entry); err != nil {
-			return body, Entry{URL: rawURL}, true, fmt.Errorf("failed to parse cache metadata: %w", err)
+	if err != nil {
+		if os.IsNotExist(err) {
+			purgeCacheFiles(bodyPath, metaPath)
+			return nil, Entry{}, false, nil
 		}
-	} else if !os.IsNotExist(err) {
-		return body, Entry{URL: rawURL}, true, err
+		return nil, Entry{}, false, err
+	}
+
+	entry := Entry{URL: rawURL}
+	if err := json.Unmarshal(metaBytes, &entry); err != nil {
+		purgeCacheFiles(bodyPath, metaPath)
+		return nil, Entry{}, false, nil
+	}
+
+	if entry.CachedAt.IsZero() {
+		purgeCacheFiles(bodyPath, metaPath)
+		return nil, Entry{}, false, nil
+	}
+
+	if time.Since(entry.CachedAt) >= cacheTTL {
+		purgeCacheFiles(bodyPath, metaPath)
+		return nil, Entry{}, false, nil
 	}
 
 	return body, entry, true, nil
@@ -81,6 +98,11 @@ func Store(rawURL string, body []byte, redirectCount int) error {
 func cachePaths(key string) (string, string) {
 	fileBase := filepath.Join(cacheDir, key)
 	return fileBase + ".body", fileBase + ".meta.json"
+}
+
+func purgeCacheFiles(bodyPath, metaPath string) {
+	_ = os.Remove(bodyPath)
+	_ = os.Remove(metaPath)
 }
 
 func writeFileAtomically(path string, data []byte, perm os.FileMode) error {
