@@ -25,7 +25,7 @@ func Run() {
 			ui.Print("error: %v\n", err)
 			return
 		} else {
-			resp, redirectCount, cacheErr, err := fetchWithCache(url)
+			resp, redirectCount, cached, cacheErr, err := fetchWithCache(url)
 			if err != nil {
 				ui.Print("request failed: %v\n", err)
 				return
@@ -40,6 +40,7 @@ func Run() {
 				ui.Print("failed to parse response: %v\n", err)
 				return
 			}
+			parsedResp.Cached = cached
 
 			ui.PrintParsedResponse(parsedResp)
 
@@ -63,7 +64,7 @@ func Run() {
 			return
 		}
 
-		resp, redirectCount, cacheErr, err := fetchWithCache(searchURL)
+		resp, redirectCount, cached, cacheErr, err := fetchWithCache(searchURL)
 		if err != nil {
 			ui.Print("search request failed: %v\n", err)
 			return
@@ -78,6 +79,7 @@ func Run() {
 			ui.Print("failed to parse search response: %v\n", err)
 			return
 		}
+		parsedResp.Cached = cached
 
 		if !parsedResp.ResponseIsOK {
 			ui.Print("search request was not successful\n")
@@ -109,19 +111,19 @@ func Run() {
 	}
 }
 
-func fetchWithCache(rawURL string) ([]byte, int, error, error) {
+func fetchWithCache(rawURL string) ([]byte, int, bool, error, error) {
 	if cachedBody, entry, found, err := cache.Load(rawURL); err != nil {
-		return nil, 0, nil, err
+		return nil, 0, false, nil, err
 	} else if found {
-		return cachedBody, entry.RedirectCount, nil, nil
+		return cachedBody, entry.RedirectCount, true, nil, nil
 	}
 
 	client := tcp.NewClient()
 	body, redirectCount, err := client.GetWithMeta(rawURL)
 	if err != nil {
-		return nil, 0, nil, err
+		return nil, 0, false, nil, err
 	}
 
 	cacheErr := cache.Store(rawURL, body, redirectCount)
-	return body, redirectCount, cacheErr, nil
+	return body, redirectCount, false, cacheErr, nil
 }
