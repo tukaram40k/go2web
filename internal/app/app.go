@@ -3,6 +3,7 @@ package app
 import (
 	"strings"
 
+	"go2web/internal/cache"
 	"go2web/internal/cli"
 	"go2web/internal/parser"
 	"go2web/internal/search"
@@ -24,12 +25,14 @@ func Run() {
 			ui.Print("error: %v\n", err)
 			return
 		} else {
-			// call url mode functions
-			client := tcp.NewClient()
-			resp, redirectCount, err := client.GetWithMeta(url)
+			resp, redirectCount, cacheErr, err := fetchWithCache(url)
 			if err != nil {
 				ui.Print("request failed: %v\n", err)
 				return
+			}
+
+			if cacheErr != nil {
+				ui.Print("failed to save cache: %v\n", cacheErr)
 			}
 
 			parsedResp, err := parser.ParseWithRedirectInfo(resp, redirectCount)
@@ -60,11 +63,14 @@ func Run() {
 			return
 		}
 
-		client := tcp.NewClient()
-		resp, redirectCount, err := client.GetWithMeta(searchURL)
+		resp, redirectCount, cacheErr, err := fetchWithCache(searchURL)
 		if err != nil {
 			ui.Print("search request failed: %v\n", err)
 			return
+		}
+
+		if cacheErr != nil {
+			ui.Print("failed to save cache: %v\n", cacheErr)
 		}
 
 		parsedResp, err := parser.ParseWithRedirectInfo(resp, redirectCount)
@@ -101,4 +107,21 @@ func Run() {
 		ui.Print("saved search log to: %s\n", logPath)
 		return
 	}
+}
+
+func fetchWithCache(rawURL string) ([]byte, int, error, error) {
+	if cachedBody, entry, found, err := cache.Load(rawURL); err != nil {
+		return nil, 0, nil, err
+	} else if found {
+		return cachedBody, entry.RedirectCount, nil, nil
+	}
+
+	client := tcp.NewClient()
+	body, redirectCount, err := client.GetWithMeta(rawURL)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	cacheErr := cache.Store(rawURL, body, redirectCount)
+	return body, redirectCount, cacheErr, nil
 }
